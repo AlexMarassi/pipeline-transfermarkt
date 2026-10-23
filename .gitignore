@@ -12,6 +12,11 @@ tm_source/
 # Secrets
 .env
 
+# Airflow (Docker): carpetas que genera Airflow al correr
+logs/
+config/
+plugins/
+
 # Local environment and caches
 .venv/
 __pycache__/
