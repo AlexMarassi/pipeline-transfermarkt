@@ -70,10 +70,11 @@ El crudo se congela en `tm_source/`, que hace de "sistema fuente". El DAG lee de
 
 Copia los archivos del snapshot sin tocar un byte, en `bronze/{table}/ingested_year=YYYY/ingested_month=MM/`.
 
-- [ ] La fecha de ingesta sale del `manifest.json` (cuándo se congeló el snapshot), no del reloj. Así re-ejecutar no crea carpetas nuevas.
-- [ ] Si la carpeta ya existe, se borra y se vuelve a escribir (idempotente).
-- [ ] Formato: JSON lines del scraper. Si se exige sin comprimir, se descomprime el `.gz` y se documenta que el contenido no cambia.
-- [ ] Tarea de validación: checksums iguales al manifest, sin archivos vacíos, cada línea es JSON válido.
+- [x] La fecha de ingesta sale del `manifest.json` (cuándo se congeló el snapshot), no del reloj. Así re-ejecutar no crea carpetas nuevas.
+- [x] Si la carpeta ya existe, se borra y se vuelve a escribir (idempotente).
+- [x] Formato: JSON lines del scraper, sin comprimir (y `player_contacts` en CSV).
+- [x] Tarea de validación: checksums iguales al manifest, sin archivos vacíos, cada línea es JSON válido.
+- [x] Probado con `airflow dags test` y re-ejecutado: mismos 10 archivos, mismos hashes.
 
 **Para la defensa:** la fecha de ingesta (ej. octubre 2026) es muy distinta de la fecha de negocio (partidos desde 2018). Por eso Bronze y Gold se particionan por fechas distintas.
 

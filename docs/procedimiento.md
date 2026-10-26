@@ -15,6 +15,8 @@ Registro de lo que se fue haciendo, en orden, y de **en qué nos apartamos del [
 | 7 | Opción B (correr el scraper) | No se hizo | La opción A alcanza para cumplir la consigna |
 | 8 | `player_contacts`: `player_id, full_name, email, phone_number` | Se agregó `updated_at` y algunas imperfecciones a propósito | Da un criterio para deduplicar (el más reciente) y casos reales de limpieza en Silver |
 | 9 | Scripts corren en la máquina de cada uno | `generate_pii.py` corre dentro del contenedor de Airflow | Faker ya está instalado ahí; nadie tiene que instalar nada extra |
+| 10 | Ventana de cada corrida = `data_interval_start` → `data_interval_end` | Cada corrida procesa el **mes calendario de `data_interval_start`** | En Airflow 3 las corridas manuales traen inicio = fin (ventana vacía). Con esta regla, manual, programada y backfill procesan el mismo mes |
+| 11 | — | Bronze copia el snapshot completo en cada corrida (no solo el mes) | El snapshot es uno solo y su fecha de ingesta es fija: todas las corridas reescriben la misma partición con el mismo contenido. `max_active_runs=1` evita que dos corridas escriban a la vez |
 
 ## Registro
 
@@ -111,7 +113,42 @@ Transfermarkt no trae datos de contacto, así que se generan con [`scripts/gener
 
 **Diferencia con el plan:** se agregó la columna `updated_at`, que no estaba en el plan. Sirve para que la deduplicación tenga un criterio claro ("el más reciente").
 
-**Pendiente:** cada integrante carga el salt en su Airflow (el valor se comparte por fuera del repo):
+**Salt:** cargado como Variable `PII_SALT` (ver [pii_y_salt.md](pii_y_salt.md)). Cada integrante lo carga en su Airflow (el valor se comparte por fuera del repo):
 ```powershell
 docker compose exec airflow-scheduler airflow variables set PII_SALT "<valor-acordado>"
 ```
+
+### 2026-10-26 — Fase 3: Bronze
+
+**Código.**
+- El DAG real es [`dags/transfermarkt_pipeline.py`](../dags/transfermarkt_pipeline.py) (`dag_id = transfermarkt_pipeline`).
+- La lógica de Bronze está en [`dags/transfermarkt/bronze.py`](../dags/transfermarkt/bronze.py).
+- Las rutas están en [`dags/transfermarkt/config.py`](../dags/transfermarkt/config.py). Se pueden cambiar con las variables de entorno `TM_SOURCE_DIR` y `TM_DATA_DIR`.
+
+**Tareas.**
+
+| Tarea | Qué hace | Falla si… |
+|---|---|---|
+| `validate_source` | Compara cada archivo de `tm_source/` con el manifest | Falta un archivo, cambió el tamaño o el SHA-256 |
+| `land_bronze` | Copia cada archivo sin modificar a `bronze/{tabla}/ingested_year=2026/ingested_month=10/`. Si la carpeta existe, la borra y la reescribe | — |
+| `validate_bronze` | Revisa la copia: mismo SHA-256 que la fuente, ningún archivo vacío, cada línea es JSON válido, misma cantidad de registros | Algo no coincide |
+
+**Configuración del DAG:**
+- `schedule="@monthly"`;
+- `start_date=2023-08-01` (primer mes con partidos);
+- `catchup=False`;
+- `max_active_runs=1`.
+
+Silver y Gold todavía son tareas de prueba: solo muestran el mes que van a procesar.
+
+**Prueba.**
+```powershell
+docker compose exec airflow-scheduler airflow dags test transfermarkt_pipeline 2024-03-01
+```
+- La primera corrida terminó en `success`, con los 10 archivos en Bronze (166,7 MB).
+- La segunda corrida dejó los mismos 10 archivos con los mismos SHA-256: **Bronze es idempotente**.
+- Las tareas de Silver y Gold mostraron la ventana `[2024-03-01, 2024-04-01)` y la partición `year=2024/month=03`.
+
+**Problemas resueltos.**
+- **`ModuleNotFoundError: transfermarkt`**: al ejecutar una tarea, Airflow 3 no agrega `dags/` a las rutas de Python. El DAG agrega su propia carpeta a `sys.path`.
+- **Ventana vacía en corridas manuales**: ver la diferencia 10 de la tabla.
