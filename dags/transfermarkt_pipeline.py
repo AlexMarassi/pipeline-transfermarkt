@@ -5,8 +5,9 @@ Cada corrida procesa la ventana [data_interval_start, data_interval_end), es dec
 Los meses históricos se cargan con backfill.
 
 Estado:
-  - Bronze: implementado (scripts en dags/transfermarkt/bronze.py)
-  - Silver y Gold: todavía de prueba, solo muestran la ventana que van a procesar
+  - Bronze: implementado (dags/transfermarkt/bronze.py)
+  - Silver: implementado (dags/transfermarkt/silver.py)
+  - Gold: todavía de prueba, solo muestra la partición que va a escribir
 """
 import logging
 import sys
@@ -61,19 +62,25 @@ def transfermarkt_pipeline():
         from transfermarkt.bronze import validate_bronze as run
         return run()
 
-    # ---------------- SILVER (de prueba) ----------------
+    # ---------------- SILVER ----------------
     @task
     def silver_dimensions():
-        log.info("TODO Fase 4: competitions, clubs y players -> Parquet")
+        from transfermarkt.silver import build_dimensions
+        return build_dimensions()
 
     @task
     def silver_facts():
+        from transfermarkt.silver import build_facts
         start, end = window()
-        log.info("TODO Fase 4: games y appearances con fecha en [%s, %s)", start.date(), end.date())
+        return build_facts(start.date(), end.date())
 
     @task
     def mask_pii():
-        log.info("TODO Fase 4: player_contacts con email hasheado (SHA-256 + PII_SALT)")
+        from airflow.sdk import Variable
+        from transfermarkt.silver import mask_pii as run
+        # El salt se lee recién cuando corre la tarea (no al parsear el DAG) y nunca está en el código
+        salt = Variable.get("PII_SALT")
+        return run(salt)
 
     # ---------------- GOLD (de prueba) ----------------
     @task

@@ -91,10 +91,11 @@ Tipa, deduplica, resuelve nulos y enmascara PII con pandas + pyarrow, y escribe 
 | competitions | Uno por `competition_id` | Normalizar nombres y mayúsculas | Sin país (torneos internacionales): "Internacional" |
 | player_contacts | Uno por `player_id` | — | Email nulo: se descarta el contacto, no el jugador |
 
-- [ ] Cada decisión va al README con su justificación (las reglas son hipótesis hasta ver el crudo).
-- [ ] PII: `email_hash = sha256(salt + email.strip().lower())`. `full_name` y `phone_number` se eliminan o se hashean. En Silver no queda ningún dato en claro.
-- [ ] El salt se lee con `Variable.get("PII_SALT")` dentro de la función `@task`, nunca a nivel de módulo.
-- [ ] Layout `silver/{table}/`. Para los hechos, un Parquet por mes (ej. `silver/games/2024-03.parquet`).
+- [x] Reglas definitivas (confirmadas con el crudo) en [silver_decisiones.md](silver_decisiones.md). Al final se pasan al README.
+- [x] PII: `email_hash = sha256(salt + email.strip().lower())`. `full_name` y `phone_number` se eliminan. En Silver no queda ningún dato en claro.
+- [x] El salt se lee con `Variable.get("PII_SALT")` dentro de la función `@task`, nunca a nivel de módulo.
+- [x] Layout `silver/{table}/`. Para los hechos, un Parquet por mes (ej. `silver/games/2024-03.parquet`).
+- [x] Idempotencia verificada: dos corridas del mismo mes dan archivos idénticos byte a byte.
 
 ## Fase 5 — Gold y catálogo DuckDB
 

@@ -1,0 +1,3 @@
+# Módulos de lógica del pipeline: se importan desde el DAG, no son DAGs.
+# Así el dag-processor no los vuelve a leer cada 30 segundos.
+transfermarkt/

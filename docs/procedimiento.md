@@ -87,7 +87,8 @@ Usar la misma `--snapshot-date` para que la fecha de ingesta de Bronze sea igual
 | players | Fechas como texto | `"Jun 18, 2002"` |
 | players | Valor de mercado siempre vacío | `null` |
 | clubs | Números como texto | `"8.396 Seats"`, `"58.6 %"`, `"+€1.40m"` |
-| competitions | Cada liga europea aparece 3 veces | — |
+| competitions | ~~Cada liga europea aparece 3 veces~~ **Corregido en Fase 4:** no son duplicados. `country_code` es el código del país; las 3 filas son liga, copa y supercopa | `ES1` = LaLiga, Copa del Rey, Supercopa |
+| games | Incluye partidos de copas nacionales (FA Cup, Copa del Rey, Copa de la Liga, etc.), no solo de liga | 780 de 3.238 partidos (2.458 son de liga) |
 | competitions | Espacios sobrantes en nombres | `"Torneo Apertura "` |
 
 **Cobertura temporal (fecha del partido):** de agosto 2023 a mediados de 2025, más algunos partidos sueltos. Da más de 20 particiones mensuales para mostrar pruning. El conteo exacto por mes se confirma en Silver, después de resolver el formato de fechas.
@@ -152,3 +153,42 @@ docker compose exec airflow-scheduler airflow dags test transfermarkt_pipeline 2
 **Problemas resueltos.**
 - **`ModuleNotFoundError: transfermarkt`**: al ejecutar una tarea, Airflow 3 no agrega `dags/` a las rutas de Python. El DAG agrega su propia carpeta a `sys.path`.
 - **Ventana vacía en corridas manuales**: ver la diferencia 10 de la tabla.
+
+### 2026-10-26 — Fase 4: Silver
+
+**Código.**
+- [`dags/transfermarkt/silver.py`](../dags/transfermarkt/silver.py): las tres tareas (`silver_dimensions`, `silver_facts`, `mask_pii`).
+- [`dags/transfermarkt/parsing.py`](../dags/transfermarkt/parsing.py): funciones puras de limpieza, probadas con 36 casos reales del crudo.
+- [`dags/transfermarkt/storage.py`](../dags/transfermarkt/storage.py): lectura de Bronze y escritura atómica de Parquet con esquema fijo.
+
+Todas las reglas, con su justificación y los conteos, están en [silver_decisiones.md](silver_decisiones.md).
+
+**Hallazgos de la exploración que cambiaron las reglas del plan.**
+- `country_code` no identifica la competición (ver la tabla de imperfecciones, corregida). El id sale del link.
+- **El día de la semana no alcanza para todas las fechas**: 182 partidos son ambiguos aunque se mire el día. Se resuelven con el formato dominante de su archivo (2023 = mes/día, 2024 = día/mes, sin votos en contra).
+- **Las tarjetas traen el minuto, no una cantidad.**
+- Los huérfanos se **recuperan** (jugadores desde el perfil de la aparición; competiciones y clubes desde los partidos) en vez de descartarse. El plan decía "se descarta como huérfano"; se cambió para no perder estadísticas reales.
+
+**Rendimiento.** La primera versión cargaba las 80.000 apariciones completas en memoria, dos veces. Superó los 5 GB de Docker y colgó el motor (hubo que reiniciar Docker Desktop). Se cambió a lectura línea por línea, guardando solo los campos necesarios:
+- **memoria:** de más de 1 GB a ~140 MB;
+- **tiempo:** ~15 s por tarea.
+
+También se agregó `dags/.airflowignore` para que Airflow no trate los módulos de `dags/transfermarkt/` como DAGs.
+
+**Prueba de idempotencia (local).** Se corrieron las 3 tareas dos veces para 2024-03: los 6 Parquet salen **idénticos byte a byte**.
+
+| Diferencia con el plan | Motivo |
+|---|---|
+| Huérfanos recuperados en vez de descartados | No perder goles y minutos de jugadores reales |
+| `half_time_score`, valor de mercado y `kickoff_time` no pasan a Silver | Vienen rotos o siempre vacíos |
+| Gold podrá incluir partidos de copa (con clubes `in_catalog = false`) | Son partidos reales del recorte |
+
+**Validación de fechas en Airflow y casos borde.**
+- **Corrida completa** (`airflow dags test transfermarkt_pipeline 2024-03-01`): `success` en 157 s, con los mismos conteos que en local.
+- **Mes sin partidos** (2023-07): no escribe nada y borra un archivo viejo si existía.
+- **Cobertura real:** 29 meses con partidos entre agosto 2023 y marzo 2026 (ver la tabla en [silver_decisiones.md](silver_decisiones.md)).
+- **Partidos "fuera de temporada"** (ej. agosto 2025) que parecían un error: son la Copa de la Liga inglesa, que en el crudo está rotulada con la temporada anterior, y un partido postergado de la Serie A (Atalanta–Fiorentina 2–3, 2/6/2024). Las fechas son correctas.
+
+**Incidente de entorno.** Después de reiniciar Docker Desktop, los contenedores arrancaron todos a la vez (por `restart: always`), sin esperar a `airflow-init`. Los chequeos de salud se acumularon (~20 procesos por contenedor) y Airflow no terminaba de arrancar.
+- **Solución:** `docker compose down` y `docker compose up -d`, que respeta el orden.
+- **Si pasa después de reiniciar Docker:** hacer lo mismo.
