@@ -1,7 +1,9 @@
 # Plan de trabajo — Pipeline Transfermarkt
 
 Versión en Markdown del plan original (`work_plan/Plan de trabajo — Pipeline Transfermarkt.pdf`), para ir marcando el avance.
-Lo que cambia respecto al plan se anota en [procedimiento.md](procedimiento.md).
+Lo que cambia respecto al plan se anota en [procedimiento.md](procedimiento.md). Lo que falta, resumido, está en [pendientes.md](pendientes.md).
+
+**Estado (2026-10-26):** fases 0 a 4 hechas; faltan la 5 (Gold), la 6 (pruebas) y la 7 (README y defensa).
 
 ## Resumen
 
@@ -76,11 +78,13 @@ Copia los archivos del snapshot sin tocar un byte, en `bronze/{table}/ingested_y
 - [x] Tarea de validación: checksums iguales al manifest, sin archivos vacíos, cada línea es JSON válido.
 - [x] Probado con `airflow dags test` y re-ejecutado: mismos 10 archivos, mismos hashes.
 
-**Para la defensa:** la fecha de ingesta (ej. octubre 2026) es muy distinta de la fecha de negocio (partidos desde 2018). Por eso Bronze y Gold se particionan por fechas distintas.
+**Para la defensa:** la fecha de ingesta (octubre 2026) es muy distinta de la fecha de negocio (partidos de agosto 2023 a marzo 2026). Por eso Bronze y Gold se particionan por fechas distintas.
 
 ## Fase 4 — Silver
 
 Tipa, deduplica, resuelve nulos y enmascara PII con pandas + pyarrow, y escribe Parquet. Las dimensiones se reescriben enteras; los hechos, solo para el mes de la corrida.
+
+Tabla original del plan (hipótesis). **Las reglas finales, que cambiaron en varios puntos al ver el crudo, están en [silver_decisiones.md](silver_decisiones.md).**
 
 | Tabla | Deduplicación | Tipado esperado | Nulos y huérfanos (a validar con los datos) |
 |---|---|---|---|
