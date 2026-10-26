@@ -13,6 +13,8 @@ Registro de lo que se fue haciendo, en orden, y de **en qué nos apartamos del [
 | 5 | Snapshot comprimido (`.json.gz`) | JSON lines **sin comprimir**, un archivo por entidad y temporada | El tamaño de la consigna (50–300 MB) es sin comprimir, y Bronze queda en formato nativo legible |
 | 6 | Recorte: Argentina + 2 o 3 ligas europeas | España, Inglaterra, Italia y Argentina; temporadas 2023 y 2024 | Argentina solo está en el crudo para 2024 y 2025. 2025 cambió de formato y está incompleta. Ver Fase 0 |
 | 7 | Opción B (correr el scraper) | No se hizo | La opción A alcanza para cumplir la consigna |
+| 8 | `player_contacts`: `player_id, full_name, email, phone_number` | Se agregó `updated_at` y algunas imperfecciones a propósito | Da un criterio para deduplicar (el más reciente) y casos reales de limpieza en Silver |
+| 9 | Scripts corren en la máquina de cada uno | `generate_pii.py` corre dentro del contenedor de Airflow | Faker ya está instalado ahí; nadie tiene que instalar nada extra |
 
 ## Registro
 
@@ -88,4 +90,28 @@ Usar la misma `--snapshot-date` para que la fecha de ingesta de Bronze sea igual
 
 **Cobertura temporal (fecha del partido):** de agosto 2023 a mediados de 2025, más algunos partidos sueltos. Da más de 20 particiones mensuales para mostrar pruning. El conteo exacto por mes se confirma en Silver, después de resolver el formato de fechas.
 
-**Pendiente de Fase 1:** generar `player_contacts` (PII sintética con Faker) y guardarla en `tm_source/`.
+### 2026-10-26 — Fase 1: PII sintética
+
+Transfermarkt no trae datos de contacto, así que se generan con [`scripts/generate_pii.py`](../scripts/generate_pii.py).
+
+- **Qué genera**: `tm_source/player_contacts/player_contacts.csv` con columnas `player_id, full_name, email, phone_number, updated_at`. Toma los 4.017 jugadores únicos de `tm_source/players/`.
+- **Determinístico**: la semilla de Faker depende del `player_id`. Dos corridas dan el mismo archivo (SHA-256 `94e95e7e…d3d239`). El script también registra el archivo en `manifest.json`.
+- **Dónde corre**: dentro de Airflow, que ya tiene Faker:
+  ```powershell
+  docker compose exec airflow-scheduler python /opt/airflow/scripts/generate_pii.py
+  ```
+
+**Imperfecciones agregadas a propósito** (para que Silver tenga reglas que aplicar):
+
+| Imperfección | Cantidad | Regla prevista en Silver |
+|---|---|---|
+| Email nulo | 106 | Se descarta el contacto, no el jugador |
+| Email en mayúsculas o con espacios | ~10% | `strip().lower()` antes de hashear |
+| Mismo jugador con 2 filas (contacto actualizado) | 84 | Se queda la fila con `updated_at` más reciente |
+
+**Diferencia con el plan:** se agregó la columna `updated_at`, que no estaba en el plan. Sirve para que la deduplicación tenga un criterio claro ("el más reciente").
+
+**Pendiente:** cada integrante carga el salt en su Airflow (el valor se comparte por fuera del repo):
+```powershell
+docker compose exec airflow-scheduler airflow variables set PII_SALT "<valor-acordado>"
+```

@@ -52,14 +52,14 @@ El crudo se congela en `tm_source/`, que hace de "sistema fuente". El DAG lee de
 
 - [x] Crear `tm_source/` con una subcarpeta por entidad y un archivo por temporada, tal como sale del scraper (`scripts/build_snapshot.py`).
 - [x] Escribir `manifest.json`: archivo, tamaño, SHA-256, origen y fecha de obtención.
-- [ ] Generar `player_contacts` con Faker y semilla fija: `player_id`, `full_name`, `email`, `phone_number`. Un registro por jugador del recorte. Se guarda como CSV en `tm_source/` (ignorado por Git).
-- [ ] Dejar el script de generación en `/scripts`.
+- [x] Generar `player_contacts` con Faker y semilla fija: `player_id`, `full_name`, `email`, `phone_number`, `updated_at`. Un registro por jugador del recorte (más algunos duplicados a propósito). Se guarda como CSV en `tm_source/` (ignorado por Git).
+- [x] Dejar el script de generación en `/scripts` (`scripts/generate_pii.py`).
 
 ## Fase 2 — Entorno y repositorio
 
 - [x] Airflow andando en cada máquina (Docker, ver [levantar_airflow.md](levantar_airflow.md)).
 - [x] `pandas`, `pyarrow`, `duckdb`, `faker` disponibles en Airflow.
-- [ ] `PII_SALT` cargado como Variable en cada máquina. El valor se comparte por fuera del repo.
+- [x] `PII_SALT` cargado como Variable (ver [pii_y_salt.md](pii_y_salt.md)). El valor se comparte por fuera del repo; cada integrante lo carga en su máquina.
 - [x] Carpeta de datos `data/` (bronze, silver, gold) montada en Airflow.
 - [x] Repo con `/dags`, `/scripts`, `/sql`, `/docs` y `README.md`.
 - [x] `.gitignore` con `data/`, `tm_source/`, `*.csv`, `*.duckdb`, `.env`, `logs/`.
