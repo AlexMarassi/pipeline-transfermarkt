@@ -45,7 +45,8 @@
 # Feel free to modify this file to suit your needs.
 #
 # Cambios del proyecto respecto al archivo oficial:
-#   - Rutas relativas (./dags, ./scripts, ./sql, ./data): funciona en la compu de cualquiera.
+#   - Rutas relativas (./dags, ./scripts, ./sql, ./data, ./tm_source): funciona en la compu de cualquiera.
+#   - ./tm_source es el snapshot fuente (se arma con scripts/build_snapshot.py, no se sube al repo).
 #   - Sin DAGs de ejemplo (LOAD_EXAMPLES = false).
 #   - duckdb y faker se instalan al arrancar (_PIP_ADDITIONAL_REQUIREMENTS).
 #   - Se crea ./data para las capas bronze / silver / gold.
@@ -84,6 +85,7 @@ x-airflow-common:
     - ./scripts:/opt/airflow/scripts
     - ./sql:/opt/airflow/sql
     - ./data:/opt/airflow/data
+    - ./tm_source:/opt/airflow/tm_source
     - ./logs:/opt/airflow/logs
     - ./config:/opt/airflow/config
     - ./plugins:/opt/airflow/plugins
