@@ -40,8 +40,9 @@ Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y de
 
 ## Fase 6 — Pruebas que pide la consigna
 
-- [ ] Backfill de todos los meses:
-  `docker compose exec airflow-scheduler airflow backfill create --dag-id transfermarkt_pipeline --from-date 2023-08-01 --to-date 2026-03-01`
+- [x] Backfill de todos los meses (hecho el 2026-10-27: 32 corridas, 21 meses con partidos, 79.978 filas en Gold = Silver):
+  `docker compose exec airflow-scheduler airflow backfill create --dag-id transfermarkt_pipeline --from-date 2023-08-01 --to-date 2026-03-01 --max-active-runs 1`
+  **Importante el `--max-active-runs 1`:** el backfill ignora el `max_active_runs` del DAG (usa 10) y varias corridas a la vez se pisan al reescribir Bronze (`Directory not empty`).
 - [ ] Idempotencia: correr un mes dos veces (ej. 2024-03, con Clear en la web), contar filas en Silver y Gold y guardar ambas salidas en `docs/`.
 - [ ] Pruning: `scripts/finops_validation.py` con `EXPLAIN ANALYZE` de la consulta completa vs. un solo mes. Guardar la salida en `docs/`.
 
