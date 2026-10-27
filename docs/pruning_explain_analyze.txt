@@ -10,11 +10,7 @@ SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airf
 EXPLAIN ANALYZE SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airflow/data/gold/player_appearances/*/*/*.parquet', hive_partitioning = true)
 ┌────────────────────────────────────────────────┐
 │┌──────────────────────────────────────────────┐│
-<<<<<<< Updated upstream
-││              Total Time: 0.0272s             ││
-=======
-││              Total Time: 0.0172s             ││
->>>>>>> Stashed changes
+││              Total Time: 0.0166s             ││
 │└──────────────────────────────────────────────┘│
 └────────────────────────────────────────────────┘
 ┌───────────────────────────┐
@@ -54,11 +50,7 @@ EXPLAIN ANALYZE SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_pa
 │    Total Files Read: 21   │
 │                           │
 │         79978 Rows        │
-<<<<<<< Updated upstream
-│          (0.02s)          │
-=======
 │          (0.01s)          │
->>>>>>> Stashed changes
 └───────────────────────────┘
 
 ====================================================================================================
@@ -73,11 +65,7 @@ SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airf
 EXPLAIN ANALYZE SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airflow/data/gold/player_appearances/*/*/*.parquet', hive_partitioning = true) WHERE year = 2024 AND month = 3
 ┌────────────────────────────────────────────────┐
 │┌──────────────────────────────────────────────┐│
-<<<<<<< Updated upstream
-││              Total Time: 0.0049s             ││
-=======
-││              Total Time: 0.0040s             ││
->>>>>>> Stashed changes
+││              Total Time: 0.0046s             ││
 │└──────────────────────────────────────────────┘│
 └────────────────────────────────────────────────┘
 ┌───────────────────────────┐
@@ -130,10 +118,5 @@ EXPLAIN ANALYZE SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_pa
 Resumen
 ====================================================================================================
 consulta                                      archivos leídos  filas leídas  tiempo (s)
-<<<<<<< Updated upstream
-Todo Gold (sin filtro)                                     21         79978      0.0272
-Un mes (year=2024 AND month=3)                              1          3445      0.0049
-=======
-Todo Gold (sin filtro)                                     21         79978      0.0172
-Un mes (year=2024 AND month=3)                              1          3445      0.0040
->>>>>>> Stashed changes
+Todo Gold (sin filtro)                                     21         79978      0.0166
+Un mes (year=2024 AND month=3)                              1          3445      0.0046

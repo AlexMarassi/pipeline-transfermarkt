@@ -131,6 +131,21 @@ def score(result):
     return (int(m.group(1)), int(m.group(2))) if m else (None, None)
 
 
+def decided_by(half_time_score, events):
+    """
+    Cómo se definió el partido. Cuando hubo tanda de penales el resultado del crudo ya los incluye
+    (14:13 en vez de 2:2). Se detecta por los eventos "Shootout" del partido y, si faltan, por
+    "on pens" en half_time_score. "AET" marca el alargue.
+    """
+    text = (half_time_score or "").lower()
+    has_shootout = any(isinstance(e, dict) and e.get("type") == "Shootout" for e in (events or []))
+    if has_shootout or "pens" in text:
+        return "penalties"
+    if "aet" in text:
+        return "extra_time"
+    return "regular"
+
+
 def matchday(value):
     """'23. Matchday' -> (23, None); 'First Round' -> (None, 'First Round')."""
     s = clean_text(value)

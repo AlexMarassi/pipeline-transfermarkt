@@ -38,7 +38,7 @@ Reglas que aplica la capa Silver ([`dags/transfermarkt/silver.py`](../dags/trans
 | games.`result` no parseable | **Se descarta el partido** | Un partido sin resultado no sirve para análisis. Hoy son 0 casos |
 | games.`attendance` vacío (247) | **NULL** | Falta el dato, no hubo 0 espectadores. Un 0 bajaría los promedios |
 | games.`referee`, `stadium` vacíos | **NULL** | Dato descriptivo; no afecta uniones ni métricas |
-| games.`half_time_score` | **No pasa a Silver** | Viene roto (`"("` en 1.623 filas, vacío en 1.526) |
+| games.`half_time_score` | **No pasa a Silver** como tal; se usa para `decided_by` | Viene roto (`"("` en 1.623 filas, vacío en 1.526), pero cuando dice `on pens` o `AET` indica cómo se definió el partido |
 | games.`kickoff_time` | **No pasa a Silver** | Siempre vacío |
 | appearances.`goals`, `assists` vacíos | **0** | La fila existe porque el jugador jugó; el campo vacío es "no convirtió". Los valores no vacíos son siempre números ≥ 1 |
 | appearances.tarjetas | **1 si hay algo, 0 si está vacío** | El crudo trae el *minuto* de la tarjeta (`"90 + 4'"`) o `✔`, no una cantidad |
@@ -78,6 +78,18 @@ Reglas que aplica la capa Silver ([`dags/transfermarkt/silver.py`](../dags/trans
 | Porcentaje | decimal | `"58.6 %"` → 58.6 |
 | Posición | 2 textos | `"Attack - Centre-Forward"` → `position = Attack`, `sub_position = Centre-Forward` |
 | Textos | sin espacios sobrantes | `"Torneo Apertura "` → `"Torneo Apertura"` |
+
+### Partidos definidos por penales o alargue
+
+En los partidos de copa el `result` del crudo **incluye los penales**: un 2:2 definido 12:11 en la tanda viene como `"14:13"`. Si se tomara tal cual, un partido parecería tener 27 goles. Silver agrega `decided_by`:
+
+| Valor | Cómo se detecta | Partidos |
+|---|---|---|
+| `penalties` | Evento `Shootout` en el partido, o `on pens` en `half_time_score` | 73 |
+| `extra_time` | `AET` en `half_time_score` | 28 |
+| `regular` | El resto | 3.044 |
+
+No se puede recuperar el resultado reglamentario de los partidos por penales. Por eso Gold deja `total_goals` en NULL en ellos y no les suma goles en las estadísticas de clubes. El ganador sí se conserva: el equipo que ganó la tanda aparece con más goles.
 
 ### Cómo se resuelve la fecha del partido
 
