@@ -14,7 +14,7 @@ Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y de
 | 4 — Silver | ✅ Hecho |
 | 5 — Gold y DuckDB | 🟡 Hecho; falta acelerar cada corrida antes del backfill |
 | 6 — Idempotencia y pruning | ✅ Hecho |
-| 7 — README y defensa | 🟡 Parcial (los docs están; falta pasarlos al README) |
+| 7 — README y defensa | 🟡 README hecho; faltan los PRs y ensayar la defensa |
 
 ## Antes de empezar (cada integrante, una vez)
 
@@ -48,11 +48,11 @@ Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y de
 
 ## Fase 7 — Cierre
 
-- [ ] Completar el README, cada sección a partir de los docs:
+- [x] Completar el README, cada sección a partir de los docs:
   - Dataset → [procedimiento.md](procedimiento.md);
   - Silver → [silver_decisiones.md](silver_decisiones.md);
   - PII → [pii_y_salt.md](pii_y_salt.md).
-- [ ] Sección "Migration to AWS" (texto corto; ver el final de [plan_de_trabajo.md](plan_de_trabajo.md)).
+- [x] Sección "Migration to AWS" (texto corto; ver el final de [plan_de_trabajo.md](plan_de_trabajo.md)).
 - [ ] Pull Requests: `feature/*` → `develop`, y al final `develop` → `main`.
 - [ ] Ensayar la defensa con las preguntas de la consigna (tabla de la Fase 7 del plan).
 
