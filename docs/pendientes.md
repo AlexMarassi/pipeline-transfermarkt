@@ -13,7 +13,7 @@ Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y de
 | 3 — Bronze | ✅ Hecho |
 | 4 — Silver | ✅ Hecho |
 | 5 — Gold y DuckDB | 🟡 Hecho; falta acelerar cada corrida antes del backfill |
-| 6 — Idempotencia y pruning | ⏳ Pendiente |
+| 6 — Idempotencia y pruning | ✅ Hecho |
 | 7 — README y defensa | 🟡 Parcial (los docs están; falta pasarlos al README) |
 
 ## Antes de empezar (cada integrante, una vez)
@@ -43,8 +43,8 @@ Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y de
 - [x] Backfill de todos los meses (hecho el 2026-10-27: 32 corridas, 21 meses con partidos, 79.978 filas en Gold = Silver):
   `docker compose exec airflow-scheduler airflow backfill create --dag-id transfermarkt_pipeline --from-date 2023-08-01 --to-date 2026-03-01 --max-active-runs 1`
   **Importante el `--max-active-runs 1`:** el backfill ignora el `max_active_runs` del DAG (usa 10) y varias corridas a la vez se pisan al reescribir Bronze (`Directory not empty`).
-- [ ] Idempotencia: correr un mes dos veces (ej. 2024-03, con Clear en la web), contar filas en Silver y Gold y guardar ambas salidas en `docs/`.
-- [ ] Pruning: `scripts/finops_validation.py` con `EXPLAIN ANALYZE` de la consulta completa vs. un solo mes. Guardar la salida en `docs/`.
+- [x] Idempotencia: 2024-03 con Clear; salida en [idempotencia_2024-03.md](idempotencia_2024-03.md).
+- [x] Pruning: `scripts/finops_validation.py`; salida en [pruning_explain_analyze.txt](pruning_explain_analyze.txt) (21 archivos → 1).
 
 ## Fase 7 — Cierre
 

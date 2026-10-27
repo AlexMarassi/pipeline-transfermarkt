@@ -3,7 +3,7 @@
 Versión en Markdown del plan original (`work_plan/Plan de trabajo — Pipeline Transfermarkt.pdf`), para ir marcando el avance.
 Lo que cambia respecto al plan se anota en [procedimiento.md](procedimiento.md). Lo que falta, resumido, está en [pendientes.md](pendientes.md).
 
-**Estado (2026-10-27):** fases 0 a 5 hechas; faltan la 6 (pruebas) y la 7 (README y defensa).
+**Estado (2026-10-27):** fases 0 a 6 hechas; falta la 7 (README y defensa).
 
 ## Resumen
 
@@ -115,15 +115,15 @@ Una fila por jugador por partido, con todo el contexto necesario para analizar s
 Cada prueba con su script en `/scripts` y su salida guardada en `/docs`.
 
 **Idempotencia**
-- [ ] Correr el DAG para un mes con muchos partidos (ej. 2024-03).
-- [ ] Contar filas en Silver (games y appearances del mes) y en la partición Gold.
-- [ ] Re-ejecutar el mismo mes desde la UI (Clear) y volver a contar.
-- [ ] Los conteos tienen que ser idénticos. Guardar ambas salidas.
+- [x] Correr el DAG para un mes con muchos partidos (ej. 2024-03).
+- [x] Contar filas en Silver (games y appearances del mes) y en la partición Gold.
+- [x] Re-ejecutar el mismo mes desde la UI (Clear) y volver a contar.
+- [x] Los conteos tienen que ser idénticos. Guardar ambas salidas.
 
 **Pruning con DuckDB**
-- [ ] Backfill de varias temporadas para tener muchas particiones.
-- [ ] `scripts/finops_validation.py` con `EXPLAIN ANALYZE` sobre todo Gold y sobre un solo mes.
-- [ ] La consulta filtrada lee menos archivos y filas. Guardar ambas salidas lado a lado.
+- [x] Backfill de varias temporadas para tener muchas particiones.
+- [x] `scripts/finops_validation.py` con `EXPLAIN ANALYZE` sobre todo Gold y sobre un solo mes.
+- [x] La consulta filtrada lee menos archivos y filas. Guardar ambas salidas lado a lado.
 
 ## Fase 7 — Documentación y defensa
 
