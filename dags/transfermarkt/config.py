@@ -19,3 +19,7 @@ GOLD_DIR = DATA_DIR / "gold"
 
 # Tablas que entran a Bronze (cada una es una subcarpeta de tm_source/)
 TABLES = ["competitions", "clubs", "games", "players", "appearances", "player_contacts"]
+
+# Catálogo DuckDB: vista sobre el Gold particionado, y los .sql que la crean
+SQL_DIR = Path(os.environ.get("TM_SQL_DIR", "/opt/airflow/sql"))
+CATALOG_PATH = DATA_DIR / "catalog.duckdb"

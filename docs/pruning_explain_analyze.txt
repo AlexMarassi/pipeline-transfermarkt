@@ -1,0 +1,139 @@
+====================================================================================================
+Todo Gold (sin filtro)
+SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airflow/data/gold/player_appearances/*/*/*.parquet', hive_partitioning = true)
+====================================================================================================
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+EXPLAIN ANALYZE SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airflow/data/gold/player_appearances/*/*/*.parquet', hive_partitioning = true)
+┌────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────┐│
+<<<<<<< Updated upstream
+││              Total Time: 0.0272s             ││
+=======
+││              Total Time: 0.0172s             ││
+>>>>>>> Stashed changes
+│└──────────────────────────────────────────────┘│
+└────────────────────────────────────────────────┘
+┌───────────────────────────┐
+│           QUERY           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│      EXPLAIN_ANALYZE      │
+│    ────────────────────   │
+│           0 Rows          │
+│          (0.00s)          │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│    UNGROUPED_AGGREGATE    │
+│    ────────────────────   │
+│        Aggregates:        │
+│        count_star()       │
+│          sum(#0)          │
+│                           │
+│           1 Rows          │
+│          (0.00s)          │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│           goals           │
+│                           │
+│         79978 Rows        │
+│          (0.00s)          │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         TABLE_SCAN        │
+│    ────────────────────   │
+│         Function:         │
+│        READ_PARQUET       │
+│                           │
+│     Projections: goals    │
+│    Total Files Read: 21   │
+│                           │
+│         79978 Rows        │
+<<<<<<< Updated upstream
+│          (0.02s)          │
+=======
+│          (0.01s)          │
+>>>>>>> Stashed changes
+└───────────────────────────┘
+
+====================================================================================================
+Un mes (year=2024 AND month=3)
+SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airflow/data/gold/player_appearances/*/*/*.parquet', hive_partitioning = true) WHERE year = 2024 AND month = 3
+====================================================================================================
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+EXPLAIN ANALYZE SELECT count(*) AS apariciones, sum(goals) AS goles FROM read_parquet('/opt/airflow/data/gold/player_appearances/*/*/*.parquet', hive_partitioning = true) WHERE year = 2024 AND month = 3
+┌────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────┐│
+<<<<<<< Updated upstream
+││              Total Time: 0.0049s             ││
+=======
+││              Total Time: 0.0040s             ││
+>>>>>>> Stashed changes
+│└──────────────────────────────────────────────┘│
+└────────────────────────────────────────────────┘
+┌───────────────────────────┐
+│           QUERY           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│      EXPLAIN_ANALYZE      │
+│    ────────────────────   │
+│           0 Rows          │
+│          (0.00s)          │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│    UNGROUPED_AGGREGATE    │
+│    ────────────────────   │
+│        Aggregates:        │
+│        count_star()       │
+│          sum(#0)          │
+│                           │
+│           1 Rows          │
+│          (0.00s)          │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│           goals           │
+│                           │
+│         3445 Rows         │
+│          (0.00s)          │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         TABLE_SCAN        │
+│    ────────────────────   │
+│         Function:         │
+│        READ_PARQUET       │
+│                           │
+│     Projections: goals    │
+│                           │
+│       File Filters:       │
+│  (year = 2024)(CAST(month │
+│      AS INTEGER) = 3)     │
+│                           │
+│    Scanning Files: 1/21   │
+│    Total Files Read: 1    │
+│                           │
+│         3445 Rows         │
+│          (0.00s)          │
+└───────────────────────────┘
+
+====================================================================================================
+Resumen
+====================================================================================================
+consulta                                      archivos leídos  filas leídas  tiempo (s)
+<<<<<<< Updated upstream
+Todo Gold (sin filtro)                                     21         79978      0.0272
+Un mes (year=2024 AND month=3)                              1          3445      0.0049
+=======
+Todo Gold (sin filtro)                                     21         79978      0.0172
+Un mes (year=2024 AND month=3)                              1          3445      0.0040
+>>>>>>> Stashed changes

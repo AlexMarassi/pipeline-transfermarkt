@@ -3,7 +3,7 @@
 Versión en Markdown del plan original (`work_plan/Plan de trabajo — Pipeline Transfermarkt.pdf`), para ir marcando el avance.
 Lo que cambia respecto al plan se anota en [procedimiento.md](procedimiento.md). Lo que falta, resumido, está en [pendientes.md](pendientes.md).
 
-**Estado (2026-10-26):** fases 0 a 4 hechas; faltan la 5 (Gold), la 6 (pruebas) y la 7 (README y defensa).
+**Estado (2026-10-27):** fases 0 a 6 hechas; falta la 7 (README y defensa).
 
 ## Resumen
 
@@ -105,25 +105,25 @@ Tabla original del plan (hipótesis). **Las reglas finales, que cambiaron en var
 
 Una fila por jugador por partido, con todo el contexto necesario para analizar sin joins.
 
-- [ ] Join: `appearances` ⋈ `games` ⋈ `players` ⋈ `clubs` ⋈ `competitions` (5 entidades; la consigna pide 4).
-- [ ] Partición `gold/player_appearances/year=YYYY/month=MM/`, mes en dos dígitos.
-- [ ] Escritura: se borra la carpeta del mes (`shutil.rmtree`) y se reescribe. Nunca append.
-- [ ] `update_catalog` ejecuta un `.sql` de `/sql` que crea la vista `player_appearances` en un archivo `.duckdb` con `read_parquet(..., hive_partitioning=True)`.
+- [x] Join: `appearances` ⋈ `games` ⋈ `players` ⋈ `clubs` ⋈ `competitions` (5 entidades; la consigna pide 4).
+- [x] Partición `gold/player_appearances/year=YYYY/month=MM/`, mes en dos dígitos.
+- [x] Escritura: se borra la carpeta del mes (`shutil.rmtree`) y se reescribe. Nunca append.
+- [x] `update_catalog` ejecuta un `.sql` de `/sql` que crea la vista `player_appearances` en un archivo `.duckdb` con `read_parquet(..., hive_partitioning=True)`.
 
 ## Fase 6 — Idempotencia y pruning
 
 Cada prueba con su script en `/scripts` y su salida guardada en `/docs`.
 
 **Idempotencia**
-- [ ] Correr el DAG para un mes con muchos partidos (ej. 2024-03).
-- [ ] Contar filas en Silver (games y appearances del mes) y en la partición Gold.
-- [ ] Re-ejecutar el mismo mes desde la UI (Clear) y volver a contar.
-- [ ] Los conteos tienen que ser idénticos. Guardar ambas salidas.
+- [x] Correr el DAG para un mes con muchos partidos (ej. 2024-03).
+- [x] Contar filas en Silver (games y appearances del mes) y en la partición Gold.
+- [x] Re-ejecutar el mismo mes desde la UI (Clear) y volver a contar.
+- [x] Los conteos tienen que ser idénticos. Guardar ambas salidas.
 
 **Pruning con DuckDB**
-- [ ] Backfill de varias temporadas para tener muchas particiones.
-- [ ] `scripts/finops_validation.py` con `EXPLAIN ANALYZE` sobre todo Gold y sobre un solo mes.
-- [ ] La consulta filtrada lee menos archivos y filas. Guardar ambas salidas lado a lado.
+- [x] Backfill de varias temporadas para tener muchas particiones.
+- [x] `scripts/finops_validation.py` con `EXPLAIN ANALYZE` sobre todo Gold y sobre un solo mes.
+- [x] La consulta filtrada lee menos archivos y filas. Guardar ambas salidas lado a lado.
 
 ## Fase 7 — Documentación y defensa
 
