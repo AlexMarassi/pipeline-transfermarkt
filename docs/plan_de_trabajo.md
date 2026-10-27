@@ -3,7 +3,7 @@
 Versión en Markdown del plan original (`work_plan/Plan de trabajo — Pipeline Transfermarkt.pdf`), para ir marcando el avance.
 Lo que cambia respecto al plan se anota en [procedimiento.md](procedimiento.md). Lo que falta, resumido, está en [pendientes.md](pendientes.md).
 
-**Estado (2026-10-26):** fases 0 a 4 hechas; faltan la 5 (Gold), la 6 (pruebas) y la 7 (README y defensa).
+**Estado (2026-10-27):** fases 0 a 5 hechas; faltan la 6 (pruebas) y la 7 (README y defensa).
 
 ## Resumen
 
@@ -105,10 +105,10 @@ Tabla original del plan (hipótesis). **Las reglas finales, que cambiaron en var
 
 Una fila por jugador por partido, con todo el contexto necesario para analizar sin joins.
 
-- [ ] Join: `appearances` ⋈ `games` ⋈ `players` ⋈ `clubs` ⋈ `competitions` (5 entidades; la consigna pide 4).
-- [ ] Partición `gold/player_appearances/year=YYYY/month=MM/`, mes en dos dígitos.
-- [ ] Escritura: se borra la carpeta del mes (`shutil.rmtree`) y se reescribe. Nunca append.
-- [ ] `update_catalog` ejecuta un `.sql` de `/sql` que crea la vista `player_appearances` en un archivo `.duckdb` con `read_parquet(..., hive_partitioning=True)`.
+- [x] Join: `appearances` ⋈ `games` ⋈ `players` ⋈ `clubs` ⋈ `competitions` (5 entidades; la consigna pide 4).
+- [x] Partición `gold/player_appearances/year=YYYY/month=MM/`, mes en dos dígitos.
+- [x] Escritura: se borra la carpeta del mes (`shutil.rmtree`) y se reescribe. Nunca append.
+- [x] `update_catalog` ejecuta un `.sql` de `/sql` que crea la vista `player_appearances` en un archivo `.duckdb` con `read_parquet(..., hive_partitioning=True)`.
 
 ## Fase 6 — Idempotencia y pruning
 

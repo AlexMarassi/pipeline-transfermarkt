@@ -1,6 +1,6 @@
 # Pendientes
 
-Qué está hecho y qué falta. Actualizado: 2026-10-26.
+Qué está hecho y qué falta. Actualizado: 2026-10-27.
 Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y decisiones en [procedimiento.md](procedimiento.md).
 
 ## Estado
@@ -12,7 +12,7 @@ Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y de
 | 2 — Entorno y repo | ✅ Hecho |
 | 3 — Bronze | ✅ Hecho |
 | 4 — Silver | ✅ Hecho |
-| 5 — Gold y DuckDB | ⏳ Pendiente |
+| 5 — Gold y DuckDB | 🟡 Hecho; falta acelerar cada corrida antes del backfill |
 | 6 — Idempotencia y pruning | ⏳ Pendiente |
 | 7 — README y defensa | 🟡 Parcial (los docs están; falta pasarlos al README) |
 
@@ -29,13 +29,13 @@ Detalle de cada fase en [plan_de_trabajo.md](plan_de_trabajo.md); historial y de
 
 ## Fase 5 — Gold y DuckDB
 
-- [ ] Implementar `build_gold` (hoy solo muestra un mensaje): una fila por aparición, uniendo appearances + games + players + clubs + competitions.
-- [ ] Escribir en `data/gold/player_appearances/year=YYYY/month=MM/`. Antes de escribir, borrar la carpeta del mes.
-- [ ] Clubes y competiciones con `in_catalog = false` (copas, rivales de ascenso): unir con LEFT JOIN para no perder filas.
-- [ ] El valor de mercado no existe en el crudo: no ponerlo en Gold.
-- [ ] `update_catalog`: archivo `.sql` en `sql/` que crea la vista `player_appearances` en DuckDB con `read_parquet(..., hive_partitioning=true)`.
+- [x] Implementar `build_gold` (hoy solo muestra un mensaje): una fila por aparición, uniendo appearances + games + players + clubs + competitions.
+- [x] Escribir en `data/gold/player_appearances/year=YYYY/month=MM/`. Antes de escribir, borrar la carpeta del mes.
+- [x] Clubes y competiciones con `in_catalog = false` (copas, rivales de ascenso): unir con LEFT JOIN para no perder filas.
+- [x] El valor de mercado no existe en el crudo: no ponerlo en Gold.
+- [x] `update_catalog`: archivo `.sql` en `sql/` que crea la vista `player_appearances` en DuckDB con `read_parquet(..., hive_partitioning=true)`.
 - [ ] **Acelerar cada corrida antes del backfill** (hoy ~2,5 min). Hoy Bronze y las dimensiones se reprocesan enteros en cada mes; por ejemplo, saltear `land_bronze` si la partición ya coincide con el manifest.
-- [ ] Borrar el DAG de prueba `transfermarkt_esqueleto`.
+- [x] Borrar el DAG de prueba `transfermarkt_esqueleto`.
 - [ ] Acordar el `dag_id`: el DAG real se llama `transfermarkt_pipeline`. Si alguien tiene otro archivo con ese nombre, se pisan.
 
 ## Fase 6 — Pruebas que pide la consigna

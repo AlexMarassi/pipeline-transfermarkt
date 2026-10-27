@@ -7,9 +7,8 @@ Los meses históricos se cargan con backfill.
 Estado:
   - Bronze: implementado (dags/transfermarkt/bronze.py)
   - Silver: implementado (dags/transfermarkt/silver.py)
-  - Gold: todavía de prueba, solo muestra la partición que va a escribir
+  - Gold: implementado (dags/transfermarkt/gold.py) y vista DuckDB (sql/)
 """
-import logging
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -18,8 +17,6 @@ from airflow.sdk import dag, get_current_context, task
 
 # Permite importar dags/transfermarkt/ cuando la tarea corre (Airflow 3 no lo agrega solo)
 sys.path.insert(0, str(Path(__file__).parent))
-
-log = logging.getLogger(__name__)
 
 
 def window():
@@ -82,15 +79,17 @@ def transfermarkt_pipeline():
         salt = Variable.get("PII_SALT")
         return run(salt)
 
-    # ---------------- GOLD (de prueba) ----------------
+    # ---------------- GOLD ----------------
     @task
     def build_gold():
+        from transfermarkt.gold import build_gold as run
         start, _ = window()
-        log.info("TODO Fase 5: gold/player_appearances/year=%04d/month=%02d/", start.year, start.month)
+        return run(start.date())
 
     @task
     def update_catalog():
-        log.info("TODO Fase 5: vista player_appearances en DuckDB")
+        from transfermarkt.gold import update_catalog as run
+        return run()
 
     (
         validate_source()
