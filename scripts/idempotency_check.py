@@ -14,6 +14,7 @@ from pathlib import Path
 import pyarrow.parquet as pq
 
 DATA = Path("/opt/airflow/data")
+GOLD_DATASETS = ["player_appearances", "match_results", "player_month_stats", "club_month_stats"]
 
 
 def sha256(path: Path) -> str:
@@ -25,18 +26,18 @@ def main(ym: str):
     files = {
         "silver games": [DATA / "silver" / "games" / f"{ym}.parquet"],
         "silver appearances": [DATA / "silver" / "appearances" / f"{ym}.parquet"],
-        "gold player_appearances": sorted(
-            (DATA / "gold" / "player_appearances" / f"year={year}" / f"month={month}").glob("*.parquet")
-        ),
     }
+    for dataset in GOLD_DATASETS:
+        files[f"gold {dataset}"] = sorted((DATA / "gold" / dataset / f"year={year}" / f"month={month}").glob("*.parquet"))
     print(f"Idempotencia del mes {ym}")
-    print(f"{'tabla':<26}{'filas':>8}  {'archivo':<42}  sha256")
+    print(f"{'tabla':<28}{'filas':>8}  {'archivo':<62}  sha256")
     for table, paths in files.items():
         for f in paths:
             rows = pq.read_metadata(f).num_rows
-            print(f"{table:<26}{rows:>8}  {f.relative_to(DATA)!s:<42}  {sha256(f)[:16]}…")
-    gold_dir = DATA / "gold" / "player_appearances" / f"year={year}" / f"month={month}"
-    print(f"archivos en la partición Gold: {len(list(gold_dir.iterdir()))}")
+            print(f"{table:<28}{rows:>8}  {f.relative_to(DATA)!s:<62}  {sha256(f)[:16]}…")
+    for dataset in GOLD_DATASETS:
+        gold_dir = DATA / "gold" / dataset / f"year={year}" / f"month={month}"
+        print(f"archivos en la partición Gold de {dataset}: {len(list(gold_dir.iterdir()))}")
 
 
 if __name__ == "__main__":

@@ -82,6 +82,7 @@ GAMES_SCHEMA = pa.schema([
     ("away_club_id", pa.int64()),
     ("home_goals", pa.int32()),
     ("away_goals", pa.int32()),
+    ("decided_by", pa.string()),         # 'regular', 'extra_time' o 'penalties' (ver silver_decisiones.md)
     ("matchday", pa.int32()),
     ("round", pa.string()),
     ("stadium", pa.string()),
@@ -159,6 +160,7 @@ def load_games():
             "away_club_name": p.clean_text(r.get("away_club_name")),
             "home_goals": home,
             "away_goals": away,
+            "decided_by": p.decided_by(r.get("half_time_score"), r.get("events")),
             "matchday": md,
             "round": rnd,
             "stadium": p.clean_text(r.get("stadium")),
