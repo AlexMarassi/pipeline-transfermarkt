@@ -27,10 +27,10 @@ Pipeline medallion (Bronze → Silver → Gold) orquestado con Airflow sobre dat
 
 | | Qué es | Valor | Se usa para |
 |---|---|---|---|
-| Fecha de negocio | Fecha del partido (`games.date`) | ago 2023 – mar 2026 | Partición de **Gold** y de los hechos de Silver |
+| Fecha de negocio | Fecha del partido (`games.date`) | ago 2023 – may 2025 | Partición de **Gold** y de los hechos de Silver |
 | Fecha de ingesta | Cuándo se congeló el snapshot | 2026-10 | Partición de **Bronze** |
 
-Los partidos cubren 32 meses, de los cuales 21 tienen partidos: de ahí salen las particiones mensuales.
+Gold cubre 22 meses calendario (agosto 2023 a mayo 2025), de los cuales 21 tienen partidos: de ahí salen las particiones mensuales. Julio 2024 no tiene partidos.
 
 Más detalle (exploración, imperfecciones del crudo, qué quedó afuera y por qué): [docs/procedimiento.md](docs/procedimiento.md).
 
@@ -188,7 +188,7 @@ Salida completa: [docs/idempotencia_2024-03.md](docs/idempotencia_2024-03.md). S
 
 El filtro por las columnas de la partición hace que DuckDB descarte las otras 20 carpetas sin abrirlas. Salida completa: [docs/pruning_explain_analyze.txt](docs/pruning_explain_analyze.txt).
 
-**Backfill.** 32 corridas (2023-08 a 2026-03), 21 meses con datos, **79.978 apariciones en Gold = las de Silver**:
+**Backfill.** 32 corridas (2023-08 a 2026-03; los meses posteriores a mayo 2025 no tienen apariciones y no generan partición), 21 meses con datos, **79.978 apariciones en Gold = las de Silver**:
 
 ```bash
 docker compose exec airflow-scheduler airflow backfill create \
