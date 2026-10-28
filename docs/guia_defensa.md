@@ -9,6 +9,7 @@ Qué mostrar, en qué orden y qué responder. Las preguntas son las de la secci�
 - [ ] Confirmar que existen `data/gold/` y `data/catalog.duckdb`. Si no, correr el backfill (ver más abajo).
 - [ ] Abrir la interfaz de DuckDB (`duckdb -ui`, http://localhost:4213) y ejecutar una vez [demo_duckdb_ui.sql](demo_duckdb_ui.sql), con la ruta de `data/gold` de tu máquina en la primera línea.
 - [ ] Tener a mano una terminal parada en la carpeta del repo.
+- [ ] Abrir la presentación con `.venv/bin/python scripts/presentar.py` (no con doble clic; se abre en http://localhost:8000/): así las diapositivas «En vivo» consultan DuckDB, muestran Airflow embebido y miden el benchmark. Iniciar sesión en Airflow una vez en ese mismo navegador.
 
 Backfill, si hiciera falta (tarda unos 10 minutos):
 
