@@ -4,6 +4,7 @@ Servidor local para la presentación: sirve el HTML y deja correr DuckDB en vivo
 - En / sirve la presentación (Pipeline Transfermarkt.html, en la raíz del repo o en la carpeta de arriba).
 - El resto de las rutas son archivos del repo, así la diapositiva de código lee el DAG tal como está.
 - /api/sql corre una consulta de solo lectura sobre las vistas de Gold (las mismas de sql/create_gold_views.sql).
+- /api/idempotency devuelve filas, SHA-256 y fecha de cada archivo de un mes (la prueba de idempotencia).
 - /api/bench corre el benchmark JSON crudo vs. Parquet de Gold (ver benchmark_formatos.py).
 - Al servirse desde localhost, el iframe de Airflow (localhost:8080) queda en el mismo sitio y la sesión funciona.
 
@@ -33,6 +34,7 @@ MAX_ROWS = 200
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import benchmark_formatos  # noqa: E402
+import idempotency_check  # noqa: E402
 
 # Solo consultas de lectura: la conexión es en memoria, pero no queremos COPY, ATTACH ni INSTALL desde el navegador
 READ_ONLY = re.compile(r"^\s*(select|with|from|explain|describe|summarize|show|pragma\s+show)\b", re.IGNORECASE)
@@ -110,6 +112,14 @@ class Handler(SimpleHTTPRequestHandler):
             if case not in benchmark_formatos.CASES:
                 return self.send_json({"error": f"caso desconocido: {case}"}, 400)
             return self.send_json(benchmark_formatos.measure(case, repeat=3))
+        if url.path == "/api/idempotency":
+            ym = parse_qs(url.query).get("ym", ["2024-03"])[0]
+            if not re.fullmatch(r"\d{4}-\d{2}", ym):
+                return self.send_json({"error": "ym debe ser YYYY-MM"}, 400)
+            try:
+                return self.send_json(idempotency_check.snapshot(ROOT / "data", ym))
+            except (FileNotFoundError, OSError) as e:
+                return self.send_json({"error": f"falta un archivo del mes {ym}: {e}"}, 404)
         if url.path in ("/", "/index.html"):
             body = self.server.html.read_bytes()
             self.send_response(200)
