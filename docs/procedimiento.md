@@ -1,6 +1,6 @@
 # Procedimiento
 
-Registro de lo que se fue haciendo, en orden, y de **en qué nos apartamos del [plan de trabajo](plan_de_trabajo.md) o de la consigna**, con el motivo.
+Registro de lo que se fue haciendo, en orden, y de **en qué nos apartamos del [plan de trabajo](plan_de_trabajo.pdf) o de la consigna**, con el motivo.
 
 ## Diferencias con el plan y la consigna
 
@@ -17,6 +17,9 @@ Registro de lo que se fue haciendo, en orden, y de **en qué nos apartamos del [
 | 9 | Scripts corren en la máquina de cada uno | `generate_pii.py` corre dentro del contenedor de Airflow | Faker ya está instalado ahí; nadie tiene que instalar nada extra |
 | 10 | Ventana de cada corrida = `data_interval_start` → `data_interval_end` | Cada corrida procesa el **mes calendario de `data_interval_start`** | En Airflow 3 las corridas manuales traen inicio = fin (ventana vacía). Con esta regla, manual, programada y backfill procesan el mismo mes |
 | 11 | — | Bronze copia el snapshot completo en cada corrida (no solo el mes) | El snapshot es uno solo y su fecha de ingesta es fija: todas las corridas reescriben la misma partición con el mismo contenido. `max_active_runs=1` evita que dos corridas escriban a la vez |
+| 12 | Silver con pandas + pyarrow | Silver con pandas + pyarrow; **Gold** arma sus joins con SQL de DuckDB dentro de la tarea y escribe con pyarrow | La restricción de pandas + pyarrow es para Silver. En Gold, los joins de 5 entidades son más claros en SQL, y DuckDB es el mismo motor que después consulta el catálogo |
+| 13 | Un dataset Gold | Cuatro datasets Gold con la misma partición (`player_appearances`, `match_results`, `player_month_stats`, `club_month_stats`) | `player_appearances` cumple el join de 4+ entidades; los otros tres dejan listas las consultas habituales (resultados, goleadores, tabla de posiciones) |
+| 14 | — | Los meses con partidos pero sin apariciones (Copa de la Liga inglesa, julio 2025 a marzo 2026) no generan partición Gold | `build_gold` necesita las apariciones del mes. Esos 93 partidos quedan en Silver. Gold cubre agosto 2023 a mayo 2025 (21 particiones) |
 
 ## Registro
 
@@ -192,3 +195,31 @@ También se agregó `dags/.airflowignore` para que Airflow no trate los módulos
 **Incidente de entorno.** Después de reiniciar Docker Desktop, los contenedores arrancaron todos a la vez (por `restart: always`), sin esperar a `airflow-init`. Los chequeos de salud se acumularon (~20 procesos por contenedor) y Airflow no terminaba de arrancar.
 - **Solución:** `docker compose down` y `docker compose up -d`, que respeta el orden.
 - **Si pasa después de reiniciar Docker:** hacer lo mismo.
+
+### 2026-10-27 — Fase 5: Gold y catálogo DuckDB
+
+**Código.**
+- [`dags/transfermarkt/gold.py`](../dags/transfermarkt/gold.py): tareas `build_gold` y `update_catalog`.
+- [`sql/create_gold_views.sql`](../sql/create_gold_views.sql): vistas del catálogo `data/catalog.duckdb`.
+
+**Qué hace.**
+- `build_gold` arma los cuatro datasets del mes con SQL de DuckDB sobre los Parquet de Silver, y los escribe con pyarrow en `gold/{dataset}/year=YYYY/month=MM/part-0.parquet`. Antes de escribir borra la carpeta del mes (`shutil.rmtree`).
+- Controla que `player_appearances` tenga tantas filas como apariciones hay en Silver, y `match_results` tantas como partidos. Si un join duplica o pierde filas, la tarea falla.
+- En los partidos definidos por penales, `total_goals` queda en NULL y no suman goles a los clubes (ver [silver_decisiones.md](silver_decisiones.md)).
+- `update_catalog` ejecuta el `.sql` y crea 7 vistas: una por dataset y tres de consulta (`top_scorers`, `highest_scoring_matches`, `league_table`).
+
+**Validación con la realidad.** Liverpool 84 puntos (Premier League 2024/25), Barcelona 88 (LaLiga 2024/25) y Lautaro Martínez 24 goles (Serie A 2023/24) coinciden con las tablas oficiales.
+
+Diferencias con la consigna: 12, 13 y 14 de la tabla de arriba.
+
+### 2026-10-27 — Fase 6: backfill, idempotencia y pruning
+
+- **Backfill** de 32 corridas (agosto 2023 a marzo 2026) con `--max-active-runs 1`: el backfill ignora el `max_active_runs` del DAG y sin esa opción varias corridas se pisaban al reescribir Bronze (`Directory not empty`). Resultado: 21 particiones y 79.978 apariciones en Gold, las mismas que en Silver.
+- **Idempotencia:** marzo 2024 con **Clear** sobre la corrida; mismas filas y mismos SHA-256 antes y después, en Silver y en los cuatro datasets de Gold. Salida en [idempotencia_2024-03.md](idempotencia_2024-03.md).
+- **Pruning:** [`scripts/finops_validation.py`](../scripts/finops_validation.py) con `EXPLAIN ANALYZE`. Sin filtro lee 21 archivos y 79.978 filas; con `year = 2024 AND month = 3` lee 1 archivo y 3.445 filas. Salida en [pruning_explain_analyze.txt](pruning_explain_analyze.txt).
+
+### 2026-10-29 — Orden del repositorio para la entrega
+
+- La presentación y su captura pasaron a [`docs/presentacion/`](presentacion/), y el plan original a [`docs/plan_de_trabajo.pdf`](plan_de_trabajo.pdf).
+- Se agregó [`docs/tm_source_manifest.json`](tm_source_manifest.json), una copia del manifest del snapshot (solo tamaños y SHA-256, sin datos), para verificar que otra máquina arma exactamente los mismos datos.
+- El README tiene ahora los pasos para reproducir todo desde cero, con el commit del proyecto fuente fijado (`e44f186`).

@@ -1,7 +1,7 @@
 """
 Servidor local para la presentación: sirve el HTML y deja correr DuckDB en vivo desde las diapositivas.
 
-- En / sirve la presentación (Pipeline Transfermarkt.html, en la raíz del repo o en la carpeta de arriba).
+- En / sirve la presentación (docs/presentacion/Pipeline Transfermarkt.html).
 - El resto de las rutas son archivos del repo, así la diapositiva de código lee el DAG tal como está.
 - /api/sql corre una consulta de solo lectura sobre las vistas de Gold (las mismas de sql/create_gold_views.sql).
 - /api/idempotency devuelve filas, SHA-256 y fecha de cada archivo de un mes (la prueba de idempotencia).
@@ -28,6 +28,7 @@ import duckdb
 
 ROOT = Path(__file__).resolve().parent.parent
 GOLD_DIR = ROOT / "data" / "gold"
+PRESENTATION_DIR = ROOT / "docs" / "presentacion"
 HTML_NAME = "Pipeline Transfermarkt.html"
 PORT = 8000
 MAX_ROWS = 200
@@ -41,10 +42,10 @@ READ_ONLY = re.compile(r"^\s*(select|with|from|explain|describe|summarize|show|p
 
 
 def find_html() -> Path:
-    for folder in (ROOT, ROOT.parent):
+    for folder in (PRESENTATION_DIR, ROOT, ROOT.parent):
         if (folder / HTML_NAME).exists():
             return folder / HTML_NAME
-    sys.exit(f"No encontré {HTML_NAME} en {ROOT} ni en {ROOT.parent}")
+    sys.exit(f"No encontré {HTML_NAME} en {PRESENTATION_DIR}")
 
 
 def catalog() -> duckdb.DuckDBPyConnection:

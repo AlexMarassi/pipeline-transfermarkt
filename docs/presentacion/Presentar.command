@@ -1,6 +1,7 @@
 #!/bin/bash
 # Doble click para presentar: levanta Airflow (Docker) y el servidor de la presentación, y abre el navegador.
-cd "$(dirname "$0")" || exit 1
+# Este archivo está en docs/presentacion/: se sube dos carpetas hasta la raíz del repo
+cd "$(dirname "$0")/../.." || exit 1
 
 if ! docker info >/dev/null 2>&1; then
   echo "Docker Desktop no está abierto. Abrilo, esperá a 'Engine running' y volvé a ejecutar esto."

@@ -1,0 +1,89 @@
+{
+  "snapshot_date": "2026-10-26",
+  "origin": "transfermarkt-datasets (dvc pull data/raw/transfermarkt-scraper)",
+  "origin_commit": "e44f186d6f06dd8452aaf54c7921ba66c961f637",
+  "competitions": [
+    "ARG1",
+    "ES1",
+    "GB1",
+    "IT1"
+  ],
+  "seasons": [
+    "2023",
+    "2024"
+  ],
+  "format": "JSON lines, sin comprimir, líneas copiadas sin modificar del crudo del scraper",
+  "total_bytes": 166653053,
+  "files": [
+    {
+      "path": "appearances/2023.json",
+      "entity": "appearances",
+      "bytes": 65707969,
+      "lines": 38728,
+      "sha256": "a7834ee2ed6fabaac19881e46d63ca0c898831aeb5b9b9965fd031b0d6cf3a56"
+    },
+    {
+      "path": "appearances/2024.json",
+      "entity": "appearances",
+      "bytes": 68880012,
+      "lines": 41279,
+      "sha256": "57c6319c6b5434330dd5d1393eecb65640834716cc73d171934383e6ba192084"
+    },
+    {
+      "path": "clubs/2023.json",
+      "entity": "clubs",
+      "bytes": 42221,
+      "lines": 60,
+      "sha256": "5866adece3da5f8c0a5d2a3cab5c4424be3a50ad666f4d026b4a5016772f4df9"
+    },
+    {
+      "path": "clubs/2024.json",
+      "entity": "clubs",
+      "bytes": 90741,
+      "lines": 90,
+      "sha256": "0bfa194b6e03197dc5d476eb8e96e1180238be866d749d454571d5e1cb067a97"
+    },
+    {
+      "path": "competitions/competitions.json",
+      "entity": "competitions",
+      "bytes": 5200,
+      "lines": 10,
+      "sha256": "1a376b766863d988478f3452ab9b18c62fb99c07b2f15013b8bd5d02f49e3368"
+    },
+    {
+      "path": "games/2023.json",
+      "entity": "games",
+      "bytes": 10478454,
+      "lines": 1526,
+      "sha256": "a1079fbc6e4f4f1a292ee9959e82c9465ebeae5e787933139496c95250a93fd1"
+    },
+    {
+      "path": "games/2024.json",
+      "entity": "games",
+      "bytes": 12286103,
+      "lines": 1712,
+      "sha256": "3e048f746bd6a4ef415f44d61fc89d9d9aab28c7d314cdca82e0c34f49142dce"
+    },
+    {
+      "path": "players/2023.json",
+      "entity": "players",
+      "bytes": 3525425,
+      "lines": 2308,
+      "sha256": "765cb3fe00258af345bfb5c31ee75bd5592bf3f07ddd5cccbd73273f0d937449"
+    },
+    {
+      "path": "players/2024.json",
+      "entity": "players",
+      "bytes": 5281798,
+      "lines": 3085,
+      "sha256": "93f3d38ae43745a5231d82ab02ed45ca844c1d51fb00ed68fa950c2ea3199d4e"
+    },
+    {
+      "path": "player_contacts/player_contacts.csv",
+      "entity": "player_contacts",
+      "bytes": 355130,
+      "lines": 4101,
+      "sha256": "94e95e7e63a53963b48aaab9634990dbb5868ce2a55bedef0f511df7dad3d239"
+    }
+  ]
+}
