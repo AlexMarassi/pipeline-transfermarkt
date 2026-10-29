@@ -2,9 +2,77 @@
 
 Pipeline medallion (Bronze → Silver → Gold) orquestado con Airflow sobre datos crudos de Transfermarkt y consultado con DuckDB. El Gold es una tabla de apariciones de jugadores por partido, particionada por la fecha del partido.
 
-- Cómo levantarlo: [docs/levantar_airflow.md](docs/levantar_airflow.md)
-- Qué falta: [docs/pendientes.md](docs/pendientes.md)
+- Cómo reproducirlo desde cero: [sección de abajo](#cómo-reproducirlo-desde-cero)
+- Cómo levantar Airflow y problemas comunes: [docs/levantar_airflow.md](docs/levantar_airflow.md)
 - Historial y desvíos respecto de la consigna: [docs/procedimiento.md](docs/procedimiento.md)
+
+## Cómo reproducirlo desde cero
+
+Los datos **no están en el repo** (consigna): se bajan de la fuente original y se recortan con un script. Son dos pasos separados: `build_snapshot.py` **no descarga nada**, solo recorta lo que ya está en disco.
+
+Requisitos: Docker Desktop con al menos 5 GB de memoria (ver [docs/levantar_airflow.md](docs/levantar_airflow.md)), Git y Python 3.10 o superior.
+
+**1. Bajar el crudo del scraper** (una sola vez, en una carpeta al lado de este repo; ~530 MB comprimidos). Se fija el commit del proyecto fuente para que los datos sean siempre los mismos:
+
+```bash
+git clone --no-checkout --filter=blob:none https://github.com/dcaribou/transfermarkt-datasets.git
+cd transfermarkt-datasets
+git config core.protectNTFS false       # Windows: el proyecto tiene archivos con ":" en el nombre
+git sparse-checkout set data .dvc       # solo hacen falta data/ y la configuración de DVC
+git checkout e44f186d6f06dd8452aaf54c7921ba66c961f637
+python -m venv .venv-dvc
+.venv-dvc/bin/pip install dvc           # Windows: .venv-dvc\Scripts\pip install dvc
+.venv-dvc/bin/dvc pull data/raw/transfermarkt-scraper.dvc   # Windows: .venv-dvc\Scripts\dvc pull ...
+cd ..
+```
+
+En Windows conviene clonar en una ruta corta (por ejemplo `C:\tm\`): DVC falla con rutas muy largas.
+
+**2. Armar el snapshot fuente** (`tm_source/`, desde la raíz de este repo; solo usa la biblioteca estándar de Python). Si el crudo se clonó en otra carpeta, cambiar las rutas de `--raw` y `--competitions-file`:
+
+```bash
+python scripts/build_snapshot.py --raw ../transfermarkt-datasets/data/raw/transfermarkt-scraper --competitions-file ../transfermarkt-datasets/data/competitions.json --out tm_source --snapshot-date 2026-10-26 --origin-commit e44f186d6f06dd8452aaf54c7921ba66c961f637
+```
+
+**3. Levantar Airflow y generar la PII sintética** (Faker ya está instalado en el contenedor):
+
+```bash
+cp .env.example .env                    # Windows: Copy-Item .env.example .env
+docker compose up -d
+docker compose exec airflow-scheduler python /opt/airflow/scripts/generate_pii.py
+```
+
+**4. Verificar que el snapshot es idéntico al nuestro.** Compara los SHA-256 de los 10 archivos con [docs/tm_source_manifest.json](docs/tm_source_manifest.json):
+
+```bash
+python -c "import json; f=lambda p:{x['path']:x['sha256'] for x in json.load(open(p))['files']}; print('OK: snapshot identico' if f('tm_source/manifest.json')==f('docs/tm_source_manifest.json') else 'DISTINTO')"
+```
+
+**5. Cargar el salt de PII** como Variable de Airflow. El valor lo elige quien corre el pipeline y nunca va al repo:
+
+```bash
+docker compose exec airflow-scheduler airflow variables set PII_SALT "<secreto>"
+```
+
+**6. Correr el pipeline.** En http://localhost:8080 (usuario y contraseña `airflow`), activar `transfermarkt_pipeline` con el interruptor. Después, un mes o todos:
+
+```bash
+# Un mes (marzo 2024)
+docker compose exec airflow-scheduler airflow dags test transfermarkt_pipeline 2024-03-01
+
+# Todos los meses (backfill: entre 10 minutos y 1 hora, según la máquina)
+docker compose exec airflow-scheduler airflow backfill create --dag-id transfermarkt_pipeline --from-date 2023-08-01 --to-date 2026-03-01 --max-active-runs 1
+```
+
+**7. Validaciones de la consigna** (ver [Idempotency and pruning](#idempotency-and-pruning)):
+
+```bash
+# Idempotencia: correr antes y después de hacer Clear sobre la corrida del mes en la web
+docker compose exec airflow-scheduler python /opt/airflow/scripts/idempotency_check.py 2024-03
+
+# Pruning con EXPLAIN ANALYZE (necesita el backfill completo)
+docker compose exec airflow-scheduler python /opt/airflow/scripts/finops_validation.py 2024 3
+```
 
 ## Dataset and recorte
 
@@ -21,7 +89,7 @@ Pipeline medallion (Bronze → Silver → Gold) orquestado con Airflow sobre dat
 | competitions | 10 | Ligas, copas y supercopas |
 | player_contacts | 4.101 | Contactos **sintéticos** (Faker, semilla fija): `player_id`, nombre, email, teléfono |
 
-**Sistema fuente congelado.** El recorte se copia una sola vez a `tm_source/` (con `scripts/build_snapshot.py`), con un `manifest.json` de tamaños y SHA-256. El DAG lee solo de ahí y nunca de Internet, así que el pipeline es reproducible. `tm_source/` no está en el repo: el procedimiento para armarlo está en [docs/pendientes.md](docs/pendientes.md).
+**Sistema fuente congelado.** El recorte se copia una sola vez a `tm_source/` (con `scripts/build_snapshot.py`), con un `manifest.json` de tamaños y SHA-256. El DAG lee solo de ahí y nunca de Internet, así que el pipeline es reproducible. `tm_source/` no está en el repo: se arma con los pasos 1 a 4 de [Cómo reproducirlo desde cero](#cómo-reproducirlo-desde-cero).
 
 **Fecha de negocio vs. fecha de ingesta.** Son distintas a propósito:
 
@@ -210,11 +278,32 @@ En el código cambian las rutas (`s3://` con `pyarrow.fs` o `s3fs`, centralizada
 ## Estructura del repo
 
 ```
-dags/            DAG transfermarkt_pipeline y módulos (bronze, silver, gold, parsing, storage, config)
-scripts/         build_snapshot, generate_pii, idempotency_check, finops_validation
-sql/             create_gold_views.sql
-docs/            procedimiento, decisiones de Silver, PII y salt, pruebas de la Fase 6, plan y pendientes
-docker-compose.yaml
+dags/
+  transfermarkt_pipeline.py   el DAG: 8 tareas y sus dependencias
+  transfermarkt/              lógica de cada capa (bronze, silver, gold), limpieza (parsing), Parquet (storage), rutas (config)
+scripts/
+  build_snapshot.py           recorta el crudo a tm_source/ y escribe el manifest (se corre una vez, fuera de Airflow)
+  generate_pii.py             genera los contactos sintéticos (Faker, semilla fija)
+  idempotency_check.py        filas y SHA-256 de un mes en Silver y Gold (prueba de idempotencia)
+  finops_validation.py        EXPLAIN ANALYZE de todo Gold contra un mes (prueba de pruning)
+  demo_queries.py             consultas de ejemplo sobre el catálogo DuckDB
+  benchmark_formatos.py       JSON crudo contra Parquet de Gold, con pandas y DuckDB
+  presentar.py                servidor local de la presentación
+sql/
+  create_gold_views.sql       vistas del catálogo DuckDB sobre Gold
+docs/
+  procedimiento.md            registro del trabajo y desvíos respecto de la consigna
+  silver_decisiones.md        reglas de Silver con su justificación
+  pii_y_salt.md               hash, salt y respuestas de defensa
+  idempotencia_2024-03.md     salida de la prueba de idempotencia
+  pruning_explain_analyze.txt salida de la prueba de pruning
+  tm_source_manifest.json     SHA-256 esperados del snapshot fuente (para verificar la reproducción)
+  levantar_airflow.md         Docker, uso diario y problemas comunes
+  demo_duckdb_ui.sql          demo en la interfaz web de DuckDB
+  plan_de_trabajo.pdf         plan original
+  presentacion/               presentación de la defensa
+docker-compose.yaml           Airflow 3.1 (imagen oficial) con duckdb y faker
+requirements.txt              dependencias para correr los scripts fuera de Docker
 ```
 
 `data/`, `tm_source/`, `*.csv`, `*.parquet`, `*.duckdb` y `.env` están en `.gitignore`: ni datos ni secretos van al repo.

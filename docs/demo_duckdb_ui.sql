@@ -2,7 +2,8 @@
 -- Pegá este archivo en una celda del notebook y ejecutalo UNA vez; después corré las consultas de abajo.
 --
 -- 1) Cambiá esta ruta por la carpeta data/gold de tu máquina:
-SET VARIABLE gold = '/Users/alexmarassi/tp-transfermarkt/pipeline-transfermarkt/data/gold';
+--    (ejemplo en Windows: 'C:/Users/<usuario>/pipeline-transfermarkt/data/gold')
+SET VARIABLE gold = '<ruta-del-repo>/data/gold';
 
 -- 2) Vistas sobre el Gold particionado (las mismas que crea el DAG en data/catalog.duckdb,
 --    pero con la ruta de tu máquina en vez de la del contenedor)

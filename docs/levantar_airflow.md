@@ -68,4 +68,4 @@ Después cerrar Docker Desktop (clic derecho en la ballena → *Quit Docker Desk
 - **"failed to connect to the docker API"**: Docker Desktop no está abierto.
 - **Después de reiniciar Docker Desktop, Airflow no termina de arrancar** (servicios `unhealthy` por varios minutos): los contenedores arrancaron todos a la vez, sin esperar a `airflow-init`. Solución: `docker compose down` y después `docker compose up -d`.
 - **El DAG no corre o la corrida queda trabada**: revisar que no esté en pausa (interruptor al lado del nombre en la web).
-- **`validate_source` falla**: falta armar `tm_source/` en tu máquina (ver [pendientes.md](pendientes.md)).
+- **`validate_source` falla**: falta armar `tm_source/` en tu máquina (pasos 1 a 4 de [Cómo reproducirlo desde cero](../README.md#cómo-reproducirlo-desde-cero)).

@@ -18,6 +18,7 @@ config/
 plugins/
 
 # Local environment and caches
+.vscode/
 .venv/
 __pycache__/
 *.pyc

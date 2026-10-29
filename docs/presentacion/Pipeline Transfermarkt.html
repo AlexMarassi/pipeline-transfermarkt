@@ -1116,8 +1116,8 @@ h3 a.ref::after{font-size:.5em}
   /* ---------- Airflow ---------- */
   const AF='http://localhost:8080/dags/transfermarkt_pipeline';
   let afProbed=false;
-  // abierta con doble clic desde la carpeta de arriba del repo, la captura está en pipeline-transfermarkt/
-  $('af-img').addEventListener('error',function f(){this.removeEventListener('error',f);this.src='pipeline-transfermarkt/image.png';});
+  // servida con scripts/presentar.py, la página está en / y la captura en docs/presentacion/
+  $('af-img').addEventListener('error',function f(){this.removeEventListener('error',f);this.src='docs/presentacion/image.png';});
   function afMode(live){
     $('af-live').setAttribute('aria-pressed',live); $('af-shot').setAttribute('aria-pressed',!live);
     $('af-frame').hidden=!live; $('af-img').hidden=live;
